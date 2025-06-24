@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebase";
 import { toast } from "react-toastify";
+import { onAuthStateChanged } from "firebase/auth";
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -18,9 +19,18 @@ function Login() {
       navigate("/dashboard");
       // Navigate to dashboard or home
     } catch (error) {
-      toast.error("Invalid credentials");
+      toast.error("Invalid credentials", error);
     }
   };
+
+  useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  });
+  return () => unsubscribe();
+}, []);
 
     
 

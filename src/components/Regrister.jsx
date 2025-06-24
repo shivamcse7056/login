@@ -1,27 +1,54 @@
 // src/components/Register.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import {auth} from "./firebase"
+import { auth, db } from "./firebase"; // ✅ import db from firebase.js
+import { doc, setDoc } from "firebase/firestore"; // ✅ Firestore functions
 import { toast } from "react-toastify";
+import { onAuthStateChanged } from "firebase/auth";
+
 function Register() {
   const [fname, setFname] = useState("");
   const [lname, setLname] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-   const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      // ✅ Create user in Firebase Auth
+      const userCred = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCred.user;
+
+      // ✅ Store user data in Firestore
+     
+
+      await setDoc(doc(db, "users", user.uid), {
+          lastName: lname,
+          email: email,
+          contact: "",
+          city: "",
+          address: "",
+          country: "",
+          firstName: fname,
+    });
+
       toast.success("Registration successful!");
-      navigate("/login");
+      navigate("/profile"); // or navigate("/login");
     } catch (error) {
       toast.error(error.message);
     }
-   
   };
+
+  useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (user) {
+      navigate("/profile");
+    }
+  });
+  return () => unsubscribe();
+}, []);
 
   return (
     <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
